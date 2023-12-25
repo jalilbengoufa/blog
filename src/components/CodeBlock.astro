@@ -4,7 +4,53 @@ import { Prism } from "@astrojs/prism";
 const { language, content } = Astro.props;
 ---
 
-<Prism lang={language} code={content} />
+<div class="code-container">
+  <button class="copy-button">Copy code</button>
+  <div class="prism-container">
+    <Prism lang={language} code={content} />
+  </div>
+</div>
+<script>
+async function copyToClipboard(buttonFound:Element) {
+  const button = buttonFound as HTMLElement;
+  const code = (button?.nextElementSibling as HTMLElement)?.innerText;
+
+  try {
+    await navigator.clipboard.writeText(code);
+    // Animation: Change button text to indicate copying
+    button.innerText = 'Copied!';
+    // Optional: Change style to indicate success
+    button.style.backgroundColor = '#4CAF50'; // Green background for success
+    button.style.color = 'white';
+
+    // Revert back to original state after a delay
+    setTimeout(() => {
+      button.innerText = 'Copy code';
+      button.style.backgroundColor = ''; // Reset background color
+      button.style.color = ''; // Reset text color
+    }, 1000); // 2000 milliseconds delay
+  } catch (err) {
+    console.error('Failed to copy text: ', err);
+    // Optional: Indicate error to user
+    button.innerText = 'Error!';
+    button.style.backgroundColor = '#f44336'; // Red background for error
+    setTimeout(() => {
+      button.innerText = 'Copy code';
+      button.style.backgroundColor = ''; // Reset background color
+    }, 2000);
+  }
+}
+
+
+  const buttons = document.querySelectorAll('.copy-button');
+
+  buttons.forEach((button) => {
+    button.addEventListener('click', () => {
+      copyToClipboard(button)
+    });
+  });
+
+</script>
 
 <style is:global>
   /**
@@ -15,7 +61,33 @@ const { language, content } = Astro.props;
  * @author Armand Philippot <contact@armandphilippot.com>
  * @homepage https://github.com/ArmandPhilippot/coldark-prism
  * @license MIT
- */
+ */.code-container {
+  display: flex;
+  flex-direction: column; /* Stack the children vertically */
+  position: relative;
+  margin: 1em 0;
+}
+
+.copy-button {
+  align-self: flex-end; 
+  margin-bottom: 0.5em;
+  transition: background-color 0.3s ease, color 0.3s ease; 
+  padding: 4px;
+
+}
+
+.copy-button:hover {
+  background-color: #6cb8e6;
+  color: white; 
+  cursor: pointer;
+}
+
+
+.prism-container {
+}
+
+
+
   code[class*="language-"],
   pre[class*="language-"] {
     color: #e3eaf2;
