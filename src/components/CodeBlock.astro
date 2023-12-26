@@ -5,7 +5,10 @@ const { language, content } = Astro.props;
 ---
 
 <div class="code-container">
-  <button class="copy-button">Copy code</button>
+  <button class="copy-button">
+    <i class="fa-regular fa-copy"></i>
+    <span>Copy code</span>
+  </button>
   <div class="prism-container">
     <Prism lang={language} code={content} />
   </div>
@@ -25,17 +28,18 @@ async function copyToClipboard(buttonFound:Element) {
 
     // Revert back to original state after a delay
     setTimeout(() => {
-      button.innerText = 'Copy code';
-      button.style.backgroundColor = ''; // Reset background color
-      button.style.color = ''; // Reset text color
-    }, 1000); // 2000 milliseconds delay
+  
+      button.innerHTML = `<i class="fa-regular fa-copy"></i><span>Copy code</span>`;
+      button.style.backgroundColor = '';
+      button.style.color = ''; 
+    }, 1000); 
   } catch (err) {
     console.error('Failed to copy text: ', err);
     // Optional: Indicate error to user
     button.innerText = 'Error!';
     button.style.backgroundColor = '#f44336'; // Red background for error
     setTimeout(() => {
-      button.innerText = 'Copy code';
+      button.innerHTML = `<i class="fa-regular fa-copy"></i><span>Copy code</span>`;
       button.style.backgroundColor = ''; // Reset background color
     }, 2000);
   }
@@ -78,7 +82,7 @@ async function copyToClipboard(buttonFound:Element) {
 
 .copy-button:hover {
   background-color: #6cb8e6;
-  color: white; 
+  color: black; 
   cursor: pointer;
 }
 

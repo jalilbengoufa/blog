@@ -67,3 +67,155 @@ Or use can use the token from the config file. You can either open the config fi
 ```bash
 grep 'token:' ~/.kube/config| head -1 | cut -d ":" -f2
 ```
+
+## How to create a read only kubernetes config
+
+The next step is to create a read only kubernetes config file. First, we need to create service account, a secret , a role and roleBinding for kubernetes-dashboard namespace, you can download and apply the [following yaml file](https://gist.github.com/jalilbengoufa/fabb336decd0255bb72d26ab4191113d) for a default configuration, or you can apply it directly like this.
+
+```bash
+kubectl apply -f https://gist.githubusercontent.com/jalilbengoufa/fabb336decd0255bb72d26ab4191113d/raw/fc92dc8f107faeed42fb4b153fd47f144e4a1733/readonly-recommended.yaml
+```
+
+here is the content of the yaml file
+
+```yaml
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: readonly-user
+  namespace: default
+automountServiceAccountToken: false
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: secret-readonly-user
+  annotations:
+    kubernetes.io/service-account.name: "readonly-user"
+type: kubernetes.io/service-account-token
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  namespace: default
+  name: readonly-role
+rules:
+  - apiGroups: ["", "apps", "extensions", "batch"]
+    resources:
+      [
+        "pods",
+        "deployments",
+        "replicasets",
+        "pods/log",
+        "configmaps",
+        "services",
+        "events",
+        "namespaces",
+        "nodes",
+        "limitranges",
+        "persistentvolumes",
+        "persistenttvolumeclaims",
+        "resourcequotas",
+        "statefulsets",
+        "replicationcontrollers",
+        "jobs",
+        "daemonsets",
+        "cronjobs",
+      ]
+    verbs: ["get", "list", "watch"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: readonly-rolebinding
+  namespace: default
+subjects:
+  - kind: ServiceAccount
+    name: readonly-user
+    namespace: default
+roleRef:
+  kind: Role
+  name: readonly-role
+  apiGroup: rbac.authorization.k8s.io
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  namespace: kubernetes-dashboard
+  name: readonly-role
+rules:
+  - apiGroups:
+      [
+        "",
+        "apps",
+        "extensions",
+        "rbac.authorization.k8s.io",
+        "networking.k8s.io",
+      ]
+    resources:
+      [
+        "pods",
+        "deployments",
+        "replicasets",
+        "pods/log",
+        "configmaps",
+        "services",
+        "events",
+        "namespaces",
+        "nodes",
+        "limitranges",
+        "persistentvolumes",
+        "persistentvolumeclaims",
+        "resourcequotas",
+        "services/proxy",
+        "serviceaccounts",
+        "roles",
+        "nodes",
+        "rolebindings",
+        "networkpolicies",
+        "clusterroles",
+        "clusterrolebindings",
+        "persistentvolumes",
+        "storageclasses",
+        "secrets",
+        "ingressclasses",
+        "ingresses",
+      ]
+    verbs: ["get", "list", "watch", "create"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: readonly-rolebinding-kube-dashboard
+  namespace: kubernetes-dashboard
+subjects:
+  - kind: ServiceAccount
+    name: readonly-user
+    namespace: default
+roleRef:
+  kind: Role
+  name: readonly-role
+  apiGroup: rbac.authorization.k8s.io
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: readonly-clusterrole
+rules:
+  - apiGroups: [""]
+    resources: ["namespaces"]
+    verbs: ["get", "list", "watch"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: readonly-clusterrolebinding
+subjects:
+  - kind: ServiceAccount
+    name: readonly-user
+    namespace: default
+roleRef:
+  kind: ClusterRole
+  name: readonly-clusterrole
+  apiGroup: rbac.authorization.k8s.io
+```
