@@ -6,8 +6,18 @@ const { language, content } = Astro.props;
 
 <div class="code-container">
   <button class="copy-button">
+    <div class="copy">
     <i class="fa-regular fa-copy"></i>
-    <span>Copy code</span>
+    <span>Copy</span>
+  </div>
+    <div class="copied">
+    <i class="fa-regular fa-check"></i>
+    <span>Copied!</span>
+  </div>
+  <div class="error">
+    <i class="fa-regular fa-times"></i>
+    <span>Error!</span>
+  </div>
   </button>
   <div class="prism-container">
     <Prism lang={language} code={content} />
@@ -18,29 +28,25 @@ async function copyToClipboard(buttonFound:Element) {
   const button = buttonFound as HTMLElement;
   const code = (button?.nextElementSibling as HTMLElement)?.innerText;
 
+  const buttonCopy = buttonFound.querySelectorAll('.copy-button .copy') as NodeListOf<HTMLElement>;
+  const buttonCopied = buttonFound.querySelectorAll('.copy-button .copied') as NodeListOf<HTMLElement>;
+  const buttonError = buttonFound.querySelectorAll('.copy-button .error') as NodeListOf<HTMLElement>;
   try {
     await navigator.clipboard.writeText(code);
-    // Animation: Change button text to indicate copying
-    button.innerText = 'Copied!';
-    // Optional: Change style to indicate success
-    button.style.backgroundColor = '#4CAF50'; // Green background for success
-    button.style.color = 'white';
 
-    // Revert back to original state after a delay
+
+    buttonCopy[0].style.display = 'none';
+    buttonCopied[0].style.display = 'block';
     setTimeout(() => {
-  
-      button.innerHTML = `<i class="fa-regular fa-copy"></i><span>Copy code</span>`;
-      button.style.backgroundColor = '';
-      button.style.color = ''; 
+      buttonCopy[0].style.display = 'block';
+      buttonCopied[0].style.display = 'none';
     }, 1000); 
   } catch (err) {
-    console.error('Failed to copy text: ', err);
-    // Optional: Indicate error to user
-    button.innerText = 'Error!';
-    button.style.backgroundColor = '#f44336'; // Red background for error
+    buttonCopy[0].style.display = 'none';
+    buttonError[0].style.display = 'block';
     setTimeout(() => {
-      button.innerHTML = `<i class="fa-regular fa-copy"></i><span>Copy code</span>`;
-      button.style.backgroundColor = ''; // Reset background color
+      buttonCopy[0].style.display = 'block';
+      buttonError[0].style.display = 'none';
     }, 2000);
   }
 }
@@ -76,14 +82,32 @@ async function copyToClipboard(buttonFound:Element) {
   align-self: flex-end; 
   margin-bottom: 0.5em;
   transition: background-color 0.3s ease, color 0.3s ease; 
-  padding: 4px;
-
+  padding-left: 6px;
+  padding-right: 6px;
+  padding-top: 2px;
+  padding-bottom: 2px;
 }
 
-.copy-button:hover {
+.copy-button .copy {
+  cursor: pointer;
+  width: 110px;
+}
+.copy-button .copy:hover {
   background-color: #6cb8e6;
   color: black; 
   cursor: pointer;
+}
+.copy-button .error {
+  background-color: #f44336;
+  cursor: pointer;
+  display: none;
+  width: 110px;
+}
+.copy-button .copied {
+  background-color: #4CAF50;
+  cursor: pointer;
+  display: none;
+  width: 110px;
 }
 
 
