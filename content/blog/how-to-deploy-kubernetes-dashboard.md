@@ -308,7 +308,7 @@ Now you can access the dashboard using read only config context file to proxy th
 
 - Or by using the decoded token you got from the previous steps .
 
-For contact or feedback you can reach me by email:
+For contact or feedback you can reach me by email bellow or on twitter, linkedIn, links are in the footer.
 
 ```txt
 iamrootin@proton.me
