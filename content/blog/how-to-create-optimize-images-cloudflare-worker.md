@@ -1,8 +1,8 @@
 ---
 external: false
 draft: false
-title: "How to Optimize Images with Cloudflare Worker"
-description: "Learn how to optimize images using a Cloudflare Worker"
+title: "How to Optimize Images with Cloudflare Workers"
+description: "Learn how to optimize images using a Cloudflare Workers"
 date: 2023-12-31
 ---
 
@@ -46,7 +46,6 @@ type FORMAT_TYPE = "avif" | "webp" | "json" | "jpeg" | "png";
 type OUTPUT_TYPE = "thumbnail" | "small" | "medium" | "large";
 
 const ALLOWED_SOURCE_ORIGINS = ["images.unsplash.com"];
-const ALLOWED_IP_LIST = ["00.00.00.00"];
 
 const OUTPUT_SIZES: { [key in OUTPUT_TYPE]: number } = {
   thumbnail: 150,
@@ -78,16 +77,6 @@ export default {
 };
 
 async function handleRequest(request: Request): Promise<Response> {
-  const ip = request.headers.get("cf-connecting-ip");
-
-  if (!ip) {
-    return new Response("Missing ip header", { status: 400 });
-  }
-
-  if (!ALLOWED_IP_LIST.includes(ip)) {
-    return new Response("Unauthorized", { status: 400 });
-  }
-
   const url = new URL(request.url);
   const options: ImageOptions = { cf: { image: {} } };
 
@@ -132,14 +121,15 @@ async function handleRequest(request: Request): Promise<Response> {
 }
 ```
 
-Let's go through the code. First, we define the allowed origins for images and IP addresses. You can add more if needed. For example, I want to allow only images from `images.unsplash.com` to be optimized, and I want to permit requests only from my IP address, such as the IP of the server where your backend is deployed. This way, you can block requests from other IP addresses.
+Let's go through the code. First, we define the allowed origins for images. You can add more if needed. For example, I want to allow only images from `images.unsplash.com` to be optimized.
 
 ```typescript
 const ALLOWED_SOURCE_ORIGINS = ["images.unsplash.com"];
-const ALLOWED_IP_LIST = ["00.00.00.00"];
 ```
 
 Then we define the output sizes. You can add more if you want. We will use the `type` query parameter to define the image's size. For example, `type=small` will return an image with a size of 320px. Feel free to modify the sizes as needed.
+
+If we want to limit a bit more the calls to the worker from unknown sources, we can use [Cloudflare Firewall Rules](https://developers.cloudflare.com/waf/) to block requests that don't have come from a specific country, IP address or a trusted source to prevent abuse.
 
 ```typescript
 const OUTPUT_SIZES: { [key in OUTPUT_TYPE]: number } = {
@@ -156,20 +146,6 @@ For this example we will use the following options:
 - quality
 - width
 - height
-
-We check if the request comes from an allowed IP address; if not, we return a 400 status code.
-
-```typescript
-const ip = request.headers.get("cf-connecting-ip");
-
-if (!ip) {
-  return new Response("Missing ip header", { status: 400 });
-}
-
-if (!ALLOWED_IP_LIST.includes(ip)) {
-  return new Response("Unauthorized", { status: 400 });
-}
-```
 
 We determine the accepted image type in the headers, decode the image URL, and verify if the image is hosted on an allowed origin. If not, we return a 403 status code.
 
